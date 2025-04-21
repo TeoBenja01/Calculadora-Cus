@@ -2,75 +2,127 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Calculadora de CUS y Plan Nutricional</title>
   <style>
+    * {
+      box-sizing: border-box;
+    }
+
     body {
-      font-family: Arial, sans-serif;
-      background: #e6f0ff;
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(to bottom, #e6f0ff, #ffffff);
+      margin: 0;
+      padding: 20px;
       display: flex;
       justify-content: center;
       align-items: center;
       min-height: 100vh;
       flex-direction: column;
-      padding: 20px;
     }
 
     h1 {
       color: #2c3e50;
+      text-align: center;
+      margin-bottom: 25px;
+      font-size: 28px;
     }
 
     .container {
-      background: #fff;
-      padding: 25px 30px;
+      background: #ffffff;
+      padding: 30px;
       border-radius: 15px;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
       max-width: 600px;
       width: 100%;
+      animation: fadeIn 0.8s ease-in-out;
     }
 
     label {
-      margin-top: 10px;
+      margin-top: 15px;
       display: block;
+      font-weight: 600;
     }
 
     input, select {
       width: 100%;
-      padding: 10px;
-      margin-top: 5px;
+      padding: 12px;
+      margin-top: 6px;
       border-radius: 8px;
       border: 1px solid #ccc;
+      font-size: 15px;
     }
 
     button {
-      margin-top: 20px;
-      padding: 10px;
+      margin-top: 25px;
+      padding: 12px;
       background-color: #3498db;
       color: white;
       border: none;
-      border-radius: 8px;
-      font-size: 16px;
+      border-radius: 10px;
+      font-size: 17px;
       cursor: pointer;
       width: 100%;
+      transition: background-color 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #2980b9;
     }
 
     .resultado {
-      margin-top: 25px;
+      margin-top: 30px;
       font-weight: bold;
       color: #27ae60;
+      font-size: 18px;
     }
 
     .recomendacion {
-      margin-top: 15px;
-      background: #f9f9f9;
-      padding: 15px;
+      margin-top: 20px;
+      background: #f0f8ff;
+      padding: 20px;
       border-radius: 10px;
       border-left: 5px solid #3498db;
+      font-size: 16px;
+      line-height: 1.6;
+    }
+
+    .actividades {
+      margin-top: 20px;
+      font-size: 16px;
+      line-height: 1.6;
+      color: #2c3e50;
+    }
+
+    .actividades ul {
+      list-style-type: disc;
+      margin-left: 20px;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @media (max-width: 600px) {
+      h1 {
+        font-size: 24px;
+      }
+      .container {
+        padding: 20px;
+      }
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <h1>Calculadora de CUS y Plan Nutricional</h1>
+    <h1>📊 Calculadora de CUS y Plan Nutricional</h1>
 
     <label for="genero">Género:</label>
     <select id="genero">
@@ -96,10 +148,17 @@
       <option value="1.9">Muy alta (2 entrenamientos por día)</option>
     </select>
 
+    <label for="objetivo">Objetivo:</label>
+    <select id="objetivo">
+      <option value="masa">Ganar masa muscular</option>
+      <option value="bajar">Bajar de peso y tener energía diaria</option>
+    </select>
+
     <button onclick="calcularCUS()">Calcular y Ver Plan</button>
 
     <div class="resultado" id="resultado"></div>
     <div class="recomendacion" id="recomendacion"></div>
+    <div class="actividades" id="actividades"></div>
   </div>
 
   <script>
@@ -109,51 +168,69 @@
       const altura = parseFloat(document.getElementById('altura').value);
       const edad = parseFloat(document.getElementById('edad').value);
       const actividad = parseFloat(document.getElementById('actividad').value);
+      const objetivo = document.getElementById('objetivo').value;
+
+      const resultadoDiv = document.getElementById('resultado');
+      const recomendacionDiv = document.getElementById('recomendacion');
+      const actividadesDiv = document.getElementById('actividades');
 
       if (isNaN(peso) || isNaN(altura) || isNaN(edad)) {
-        document.getElementById('resultado').innerText = "Por favor completa todos los campos correctamente.";
+        resultadoDiv.innerText = "⚠️ Por favor completa todos los campos correctamente.";
+        recomendacionDiv.innerHTML = "";
+        actividadesDiv.innerHTML = "";
         return;
       }
 
-      let TMB;
-      if (genero === 'masculino') {
-        TMB = 10 * peso + 6.25 * altura - 5 * edad + 5;
-      } else {
-        TMB = 10 * peso + 6.25 * altura - 5 * edad - 161;
-      }
+      let TMB = genero === 'masculino'
+        ? 10 * peso + 6.25 * altura - 5 * edad + 5
+        : 10 * peso + 6.25 * altura - 5 * edad - 161;
 
       const CUS = TMB * actividad;
-      document.getElementById('resultado').innerText = `Tu CUS estimado es de ${CUS.toFixed(2)} kcal por día.`;
+      resultadoDiv.innerText = `🔥 Tu CUS estimado es de ${CUS.toFixed(2)} kcal por día.`;
 
-      // Recomendaciones según el rango
       let plan = "";
-      if (CUS < 1800) {
+
+      if (objetivo === "masa") {
         plan = `
-          🥗 Recomendación: Mantener una dieta equilibrada y ligera.<br>
-          🍳 Desayuno: Avena con frutas.<br>
-          🍗 Almuerzo: Pollo con arroz integral y ensalada.<br>
-          🥛 Merienda: Yogur o batido natural.<br>
-          🍲 Cena: Sopa de verduras y pescado al horno.
+          <span>🏋️ Objetivo: Ganar Masa Muscular</span><br>
+          🍳 <b>Desayuno:</b> 3 huevos, avena con leche y fruta.<br>
+          🍛 <b>Almuerzo:</b> Arroz, lentejas y carne magra.<br>
+          🥤 <b>Merienda:</b> Batido con proteína y frutos secos.<br>
+          🍽 <b>Cena:</b> Pasta con pollo o pescado y vegetales.<br>
+          📝 Consejo: Aumentá entre 300 y 500 kcal por encima de tu CUS.
         `;
-      } else if (CUS >= 1800 && CUS <= 2500) {
-        plan = `
-          💪 Recomendación: Ideal para mantenimiento y rendimiento moderado.<br>
-          🍞 Desayuno: Pan integral con huevos y fruta.<br>
-          🥙 Almuerzo: Ensalada grande con proteínas y quinoa.<br>
-          🧃 Merienda: Batido con avena y plátano.<br>
-          🍽 Cena: Pasta integral con vegetales y carne magra.
+
+        actividadesDiv.innerHTML = `
+          <b>Actividades recomendadas para ganar masa muscular:</b>
+          <ul>
+            <li>Entrenamientos de fuerza (pesas, máquinas, pesas libres).</li>
+            <li>Ejercicios compuestos como sentadillas, press de banca, deadlifts y pull-ups.</li>
+            <li>Entrenamientos de alta intensidad (HIIT).</li>
+            <li>Entrenar 3-5 días a la semana.</li>
+          </ul>
         `;
       } else {
         plan = `
-          🏋️ Recomendación: Necesitas más energía para entrenamientos intensos.<br>
-          🍳 Desayuno: 3 huevos, pan integral, avena con fruta.<br>
-          🍝 Almuerzo: Pasta con pollo y verduras.<br>
-          🥜 Merienda: Frutos secos, yogur griego o barrita energética.<br>
-          🍛 Cena: Arroz, lentejas y filete de pescado o carne.
+          <span>🏋️ Objetivo: Bajar de Peso y Tener Energía</span><br>
+          🥣 <b>Desayuno:</b> Yogur descremado con fruta y avena.<br>
+          🥗 <b>Almuerzo:</b> Ensalada con pollo o atún y quinoa.<br>
+          🍎 <b>Merienda:</b> Fruta o puñado de frutos secos.<br>
+          🍲 <b>Cena:</b> Verduras al vapor con huevo o pescado.<br>
+          📝 Consejo: Consumí entre 300 y 500 kcal menos que tu CUS para perder grasa de forma saludable.
+        `;
+
+        actividadesDiv.innerHTML = `
+          <b>Actividades recomendadas para bajar de peso:</b>
+          <ul>
+            <li>Cardio (correr, nadar, montar bicicleta, caminar rápido).</li>
+            <li>Entrenamientos de alta intensidad (HIIT).</li>
+            <li>Entrenamientos en intervalos.</li>
+            <li>Entrenar 4-6 días a la semana con cardio de intensidad moderada y alta.</li>
+          </ul>
         `;
       }
 
-      document.getElementById('recomendacion').innerHTML = plan;
+      recomendacionDiv.innerHTML = plan;
     }
   </script>
 </body>
