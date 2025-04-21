@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Calculadora de CUS y Plan Nutricional</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #e6f0ff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      flex-direction: column;
+      padding: 20px;
+    }
+
+    h1 {
+      color: #2c3e50;
+    }
+
+    .container {
+      background: #fff;
+      padding: 25px 30px;
+      border-radius: 15px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+      max-width: 600px;
+      width: 100%;
+    }
+
+    label {
+      margin-top: 10px;
+      display: block;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 10px;
+      margin-top: 5px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+    }
+
+    button {
+      margin-top: 20px;
+      padding: 10px;
+      background-color: #3498db;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+      width: 100%;
+    }
+
+    .resultado {
+      margin-top: 25px;
+      font-weight: bold;
+      color: #27ae60;
+    }
+
+    .recomendacion {
+      margin-top: 15px;
+      background: #f9f9f9;
+      padding: 15px;
+      border-radius: 10px;
+      border-left: 5px solid #3498db;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Calculadora de CUS y Plan Nutricional</h1>
+
+    <label for="genero">Género:</label>
+    <select id="genero">
+      <option value="masculino">Masculino</option>
+      <option value="femenino">Femenino</option>
+    </select>
+
+    <label for="peso">Peso (kg):</label>
+    <input type="number" id="peso">
+
+    <label for="altura">Altura (cm):</label>
+    <input type="number" id="altura">
+
+    <label for="edad">Edad:</label>
+    <input type="number" id="edad">
+
+    <label for="actividad">Nivel de Actividad Física:</label>
+    <select id="actividad">
+      <option value="1.2">Sedentario</option>
+      <option value="1.375">Ligera (1-3 días/semana)</option>
+      <option value="1.55">Moderada (3-5 días/semana)</option>
+      <option value="1.725">Alta (6-7 días/semana)</option>
+      <option value="1.9">Muy alta (2 entrenamientos por día)</option>
+    </select>
+
+    <button onclick="calcularCUS()">Calcular y Ver Plan</button>
+
+    <div class="resultado" id="resultado"></div>
+    <div class="recomendacion" id="recomendacion"></div>
+  </div>
+
+  <script>
+    function calcularCUS() {
+      const genero = document.getElementById('genero').value;
+      const peso = parseFloat(document.getElementById('peso').value);
+      const altura = parseFloat(document.getElementById('altura').value);
+      const edad = parseFloat(document.getElementById('edad').value);
+      const actividad = parseFloat(document.getElementById('actividad').value);
+
+      if (isNaN(peso) || isNaN(altura) || isNaN(edad)) {
+        document.getElementById('resultado').innerText = "Por favor completa todos los campos correctamente.";
+        return;
+      }
+
+      let TMB;
+      if (genero === 'masculino') {
+        TMB = 10 * peso + 6.25 * altura - 5 * edad + 5;
+      } else {
+        TMB = 10 * peso + 6.25 * altura - 5 * edad - 161;
+      }
+
+      const CUS = TMB * actividad;
+      document.getElementById('resultado').innerText = `Tu CUS estimado es de ${CUS.toFixed(2)} kcal por día.`;
+
+      // Recomendaciones según el rango
+      let plan = "";
+      if (CUS < 1800) {
+        plan = `
+          🥗 Recomendación: Mantener una dieta equilibrada y ligera.<br>
+          🍳 Desayuno: Avena con frutas.<br>
+          🍗 Almuerzo: Pollo con arroz integral y ensalada.<br>
+          🥛 Merienda: Yogur o batido natural.<br>
+          🍲 Cena: Sopa de verduras y pescado al horno.
+        `;
+      } else if (CUS >= 1800 && CUS <= 2500) {
+        plan = `
+          💪 Recomendación: Ideal para mantenimiento y rendimiento moderado.<br>
+          🍞 Desayuno: Pan integral con huevos y fruta.<br>
+          🥙 Almuerzo: Ensalada grande con proteínas y quinoa.<br>
+          🧃 Merienda: Batido con avena y plátano.<br>
+          🍽 Cena: Pasta integral con vegetales y carne magra.
+        `;
+      } else {
+        plan = `
+          🏋️ Recomendación: Necesitas más energía para entrenamientos intensos.<br>
+          🍳 Desayuno: 3 huevos, pan integral, avena con fruta.<br>
+          🍝 Almuerzo: Pasta con pollo y verduras.<br>
+          🥜 Merienda: Frutos secos, yogur griego o barrita energética.<br>
+          🍛 Cena: Arroz, lentejas y filete de pescado o carne.
+        `;
+      }
+
+      document.getElementById('recomendacion').innerHTML = plan;
+    }
+  </script>
+</body>
+</html>
