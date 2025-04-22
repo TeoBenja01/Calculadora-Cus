@@ -8,7 +8,6 @@
     * {
       box-sizing: border-box;
     }
-
     body {
       font-family: 'Segoe UI', sans-serif;
       background: linear-gradient(to bottom, #e6f0ff, #ffffff);
@@ -20,14 +19,12 @@
       min-height: 100vh;
       flex-direction: column;
     }
-
     h1 {
       color: #2c3e50;
       text-align: center;
       margin-bottom: 25px;
       font-size: 28px;
     }
-
     .container {
       background: #ffffff;
       padding: 30px;
@@ -37,13 +34,11 @@
       width: 100%;
       animation: fadeIn 0.8s ease-in-out;
     }
-
     label {
       margin-top: 15px;
       display: block;
       font-weight: 600;
     }
-
     input, select {
       width: 100%;
       padding: 12px;
@@ -52,7 +47,6 @@
       border: 1px solid #ccc;
       font-size: 15px;
     }
-
     button {
       margin-top: 25px;
       padding: 12px;
@@ -65,18 +59,15 @@
       width: 100%;
       transition: background-color 0.3s ease;
     }
-
     button:hover {
       background-color: #2980b9;
     }
-
     .resultado {
       margin-top: 30px;
       font-weight: bold;
       color: #27ae60;
       font-size: 18px;
     }
-
     .recomendacion {
       margin-top: 20px;
       background: #f0f8ff;
@@ -86,19 +77,36 @@
       font-size: 16px;
       line-height: 1.6;
     }
-
     .actividades {
       margin-top: 20px;
       font-size: 16px;
       line-height: 1.6;
       color: #2c3e50;
     }
-
     .actividades ul {
       list-style-type: disc;
       margin-left: 20px;
     }
-
+    .registro {
+      background: #e9f7ef;
+      border-left: 4px solid #27ae60;
+      padding: 10px;
+      margin-top: 10px;
+      border-radius: 5px;
+    }
+    #borrarBtn {
+      background: #e74c3c;
+    }
+    .detallesRegistro {
+      margin-top: 20px;
+      background: #f7f7f7;
+      padding: 15px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      font-size: 16px;
+      line-height: 1.6;
+      display: none;
+    }
     @keyframes fadeIn {
       from {
         opacity: 0;
@@ -109,7 +117,6 @@
         transform: translateY(0);
       }
     }
-
     @media (max-width: 600px) {
       h1 {
         font-size: 24px;
@@ -123,6 +130,9 @@
 <body>
   <div class="container">
     <h1>📊 Calculadora de CUS y Plan Nutricional</h1>
+
+    <label for="nombre">Nombre:</label>
+    <input type="text" id="nombre" placeholder="Tu nombre">
 
     <label for="genero">Género:</label>
     <select id="genero">
@@ -154,84 +164,149 @@
       <option value="bajar">Bajar de peso y tener energía diaria</option>
     </select>
 
-    <button onclick="calcularCUS()">Calcular y Ver Plan</button>
+    <button onclick="guardarRegistro()">Guardar Registro</button>
+    <button id="borrarBtn" onclick="borrarRegistros()">🗑️ Borrar Todos los Registros</button>
 
     <div class="resultado" id="resultado"></div>
     <div class="recomendacion" id="recomendacion"></div>
     <div class="actividades" id="actividades"></div>
+
+    <div id="registrosContainer">
+      <h3>📋 Registros Guardados</h3>
+      <div id="registros"></div>
+    </div>
+
+    <div id="detallesRegistro" class="detallesRegistro"></div>
   </div>
 
   <script>
-    function calcularCUS() {
-      const genero = document.getElementById('genero').value;
-      const peso = parseFloat(document.getElementById('peso').value);
-      const altura = parseFloat(document.getElementById('altura').value);
-      const edad = parseFloat(document.getElementById('edad').value);
-      const actividad = parseFloat(document.getElementById('actividad').value);
-      const objetivo = document.getElementById('objetivo').value;
+    function calcularCUS(peso, altura, edad, actividad) {
+      const TMB = 10 * peso + 6.25 * altura - 5 * edad + 5;
+      return TMB * actividad;
+    }
 
-      const resultadoDiv = document.getElementById('resultado');
-      const recomendacionDiv = document.getElementById('recomendacion');
-      const actividadesDiv = document.getElementById('actividades');
+    function guardarRegistro() {
+      const nombre = document.getElementById("nombre").value;
+      const genero = document.getElementById("genero").value;
+      const peso = parseFloat(document.getElementById("peso").value);
+      const altura = parseFloat(document.getElementById("altura").value);
+      const edad = parseFloat(document.getElementById("edad").value);
+      const actividad = parseFloat(document.getElementById("actividad").value);
+      const objetivo = document.getElementById("objetivo").value;
 
-      if (isNaN(peso) || isNaN(altura) || isNaN(edad)) {
-        resultadoDiv.innerText = "⚠️ Por favor completa todos los campos correctamente.";
-        recomendacionDiv.innerHTML = "";
-        actividadesDiv.innerHTML = "";
+      if (!nombre || isNaN(peso) || isNaN(altura) || isNaN(edad)) {
+        alert("Por favor completa todos los campos.");
         return;
       }
 
-      let TMB = genero === 'masculino'
-        ? 10 * peso + 6.25 * altura - 5 * edad + 5
-        : 10 * peso + 6.25 * altura - 5 * edad - 161;
+      const cus = calcularCUS(peso, altura, edad, actividad).toFixed(2);
 
-      const CUS = TMB * actividad;
-      resultadoDiv.innerText = `🔥 Tu CUS estimado es de ${CUS.toFixed(2)} kcal por día.`;
+      const nuevo = {
+        nombre, genero, peso, altura, edad, actividad, objetivo, cus
+      };
+
+      let registros = JSON.parse(localStorage.getItem("registros")) || [];
+      registros.push(nuevo);
+      localStorage.setItem("registros", JSON.stringify(registros));
+
+      mostrarRegistros();
+      mostrarPlan(objetivo, cus);
+    }
+
+    function mostrarRegistros() {
+      const contenedor = document.getElementById("registros");
+      contenedor.innerHTML = "";
+      const registros = JSON.parse(localStorage.getItem("registros")) || [];
+
+      registros.forEach((reg, index) => {
+        const div = document.createElement("div");
+        div.classList.add("registro");
+        div.innerHTML = `
+          <a href="javascript:void(0);" onclick="mostrarDetalles(${index})">
+            <b>${reg.nombre}</b> - CUS: ${reg.cus} kcal
+          </a><br>
+          Objetivo: ${reg.objetivo}
+        `;
+        contenedor.appendChild(div);
+      });
+    }
+
+    function mostrarDetalles(index) {
+      const registros = JSON.parse(localStorage.getItem("registros")) || [];
+      const reg = registros[index];
+      const detallesDiv = document.getElementById("detallesRegistro");
+      
+      detallesDiv.style.display = "block";
+      detallesDiv.innerHTML = `
+        <h4>Detalles de ${reg.nombre}</h4>
+        <b>Género:</b> ${reg.genero}<br>
+        <b>Peso:</b> ${reg.peso} kg<br>
+        <b>Altura:</b> ${reg.altura} cm<br>
+        <b>Edad:</b> ${reg.edad} años<br>
+        <b>Actividad Física:</b> ${reg.actividad}<br>
+        <b>Objetivo:</b> ${reg.objetivo}<br>
+        <b>CUS Estimado:</b> ${reg.cus} kcal<br>
+      `;
+    }
+
+    function mostrarPlan(objetivo, cus) {
+      const resultadoDiv = document.getElementById("resultado");
+      const recomendacionDiv = document.getElementById("recomendacion");
+      const actividadesDiv = document.getElementById("actividades");
+
+      resultadoDiv.innerText = `🔥 Tu CUS estimado es de ${cus} kcal por día.`;
 
       let plan = "";
-
       if (objetivo === "masa") {
         plan = `
-          <span>🏋️ Objetivo: Ganar Masa Muscular</span><br>
-          🍳 <b>Desayuno:</b> 3 huevos, avena con leche y fruta.<br>
-          🍛 <b>Almuerzo:</b> Arroz, lentejas y carne magra.<br>
-          🥤 <b>Merienda:</b> Batido con proteína y frutos secos.<br>
-          🍽 <b>Cena:</b> Pasta con pollo o pescado y vegetales.<br>
-          📝 Consejo: Aumentá entre 300 y 500 kcal por encima de tu CUS.
+          🏋️ Objetivo: Ganar Masa Muscular
+          🍳 Desayuno: 3 huevos, avena con leche y fruta.
+          🍛 Almuerzo: Arroz, lentejas y carne magra.
+          🥤 Merienda: Batido con proteína y frutos secos.
+          🍽 Cena: Pasta con pollo o pescado y vegetales.
+          📝 Consejo: Aumenta entre 300 y 500 kcal por encima de tu CUS.
         `;
 
         actividadesDiv.innerHTML = `
-          <b>Actividades recomendadas para ganar masa muscular:</b>
+          <b>Actividades recomendadas:</b>
           <ul>
-            <li>Entrenamientos de fuerza (pesas, máquinas, pesas libres).</li>
-            <li>Ejercicios compuestos como sentadillas, press de banca, deadlifts y pull-ups.</li>
-            <li>Entrenamientos de alta intensidad (HIIT).</li>
-            <li>Entrenar 3-5 días a la semana.</li>
+            <li>Entrenamiento de fuerza (pesas, máquinas).</li>
+            <li>Ejercicios compuestos como sentadillas, press de banca.</li>
+            <li>HIIT.</li>
           </ul>
         `;
       } else {
         plan = `
-          <span>🏋️ Objetivo: Bajar de Peso y Tener Energía</span><br>
-          🥣 <b>Desayuno:</b> Yogur descremado con fruta y avena.<br>
-          🥗 <b>Almuerzo:</b> Ensalada con pollo o atún y quinoa.<br>
-          🍎 <b>Merienda:</b> Fruta o puñado de frutos secos.<br>
-          🍲 <b>Cena:</b> Verduras al vapor con huevo o pescado.<br>
-          📝 Consejo: Consumí entre 300 y 500 kcal menos que tu CUS para perder grasa de forma saludable.
+          🏋️ Objetivo: Bajar de Peso y Tener Energía
+          🥣 Desayuno: Yogur descremado con fruta y avena.
+          🥗 Almuerzo: Ensalada con pollo o atún y quinoa.
+          🍎 Merienda: Fruta o frutos secos.
+          🍲 Cena: Verduras al vapor con huevo o pescado.
+          📝 Consejo: Consume entre 300 y 500 kcal menos que tu CUS.
         `;
 
         actividadesDiv.innerHTML = `
-          <b>Actividades recomendadas para bajar de peso:</b>
+          <b>Actividades recomendadas:</b>
           <ul>
-            <li>Cardio (correr, nadar, montar bicicleta, caminar rápido).</li>
-            <li>Entrenamientos de alta intensidad (HIIT).</li>
-            <li>Entrenamientos en intervalos.</li>
-            <li>Entrenar 4-6 días a la semana con cardio de intensidad moderada y alta.</li>
+            <li>Cardio (correr, nadar, caminar rápido).</li>
+            <li>HIIT.</li>
+            <li>Entrenamiento en intervalos.</li>
           </ul>
         `;
       }
-
       recomendacionDiv.innerHTML = plan;
     }
+
+    function borrarRegistros() {
+      if (confirm("¿Estás seguro de que quieres borrar todos los registros?")) {
+        localStorage.removeItem("registros");
+        mostrarRegistros();
+        alert("Registros eliminados.");
+      }
+    }
+
+    // Mostrar al cargar la página
+    mostrarRegistros();
   </script>
 </body>
 </html>
